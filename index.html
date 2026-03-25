@@ -14,15 +14,14 @@
 
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/cpexcel.js"></script>
-<!-- Supabase 연결 -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  // ⚠️ 아래 두 줄을 본인의 값으로 바꾸세요!
-  const SUPABASE_URL = 'https://jyrzdbmqnwotomcuucgd.supabase.co';      // 1-4에서 메모한 Project URL
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp5cnpkYm1xbndvdG9tY3V1Y2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNzkzMjcsImV4cCI6MjA4OTk1NTMyN30.hjfGmMgYJhYI2Pc5vCGUHyJlkWaDYoeOGV577vsAsSw';          // 1-4에서 메모한 anon public 키
 
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-</script>
+    <!-- Supabase 연결 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      const SUPABASE_URL = 'https://jyrzdbmqnwotomcuucgd.supabase.co';
+      const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp5cnpkYm1xbndvdG9tY3V1Y2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNzkzMjcsImV4cCI6MjA4OTk1NTMyN30.hjfGmMgYJhYI2Pc5vCGUHyJlkWaDYoeOGV577vsAsSw';
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    </script>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
 
@@ -1269,10 +1268,15 @@
                     ⬆ 데이터 불러오기
                 </button>
                 <input type="file" id="import-data-input" accept=".json" style="display:none;" onchange="importAppData(this)">
+                <button onclick="saveToCloud()" title="Supabase 클라우드에 데이터 저장"
+                    style="font-size:0.75rem; padding:5px 11px; border:1px solid #6ee7b7; border-radius:7px; background:#a7f3d0; color:#065f46; cursor:pointer; white-space:nowrap; font-weight:700; display:flex; align-items:center; gap:4px;">
+                    ☁️ 클라우드 저장
+                </button>
+                <button onclick="loadFromCloud()" title="Supabase 클라우드에서 데이터 불러오기"
+                    style="font-size:0.75rem; padding:5px 11px; border:1px solid #93c5fd; border-radius:7px; background:#bfdbfe; color:#1e3a8a; cursor:pointer; white-space:nowrap; font-weight:700; display:flex; align-items:center; gap:4px;">
+                    ☁️ 클라우드 불러오기
+                </button>
             </div>
-<button onclick="saveToCloud()" class="nav-btn" style="background:#a7f3d0;color:#065f46;">☁️ 클라우드 저장</button>
-<button onclick="loadFromCloud()" class="nav-btn" style="background:#bfdbfe;color:#1e3a8a;">☁️ 클라우드 불러오기</button>
-
 
         </nav>
 
@@ -8723,135 +8727,125 @@ window.onload = function() { setTimeout(function() { window.print(); window.clos
 
     <!-- ===== 데이터 저장 / 불러오기 ===== -->
     <script>
-    // ===== Supabase에 데이터 저장하기 =====
-    async function saveToCloud() {
-        const snapshot = {
-            _version: 2,
-            _savedAt: new Date().toISOString(),
-            masterData:                  typeof masterData                 !== 'undefined' ? masterData                 : [],
-            salesData:                   typeof salesData                  !== 'undefined' ? salesData                  : {},
-            cashData:                    typeof cashData                   !== 'undefined' ? cashData                   : {},
-            namuData:                    typeof namuData                   !== 'undefined' ? namuData                   : {},
-            returnsData:                 typeof returnsData                !== 'undefined' ? returnsData                : {},
-            returnsBookstoreData:        typeof returnsBookstoreData       !== 'undefined' ? returnsBookstoreData       : {},
-            returnsBookstoreDetailData:  typeof returnsBookstoreDetailData !== 'undefined' ? returnsBookstoreDetailData : {},
-            namuReturnsDetailData:       typeof namuReturnsDetailData      !== 'undefined' ? namuReturnsDetailData      : {},
-            specialData:                 typeof specialData                !== 'undefined' ? specialData                : [],
-            ledgerIntData:               typeof ledgerIntData              !== 'undefined' ? ledgerIntData              : [],
-            ledgerDepositData:           typeof ledgerDepositData          !== 'undefined' ? ledgerDepositData          : [],
-            ledgerSpecialData:           typeof ledgerSpecialData          !== 'undefined' ? ledgerSpecialData          : [],
-            storeDetailAdjustments:      typeof storeDetailAdjustments     !== 'undefined' ? storeDetailAdjustments     : {},
-        };
-
-        const { error } = await supabase
-            .from('app_data')
-            .update({ data: snapshot, updated_at: new Date().toISOString() })
-            .eq('id', 'main');
-
-        if (error) {
-            alert('❌ 저장 실패: ' + error.message);
-        } else {
-            alert('✅ 클라우드에 저장 완료!');
-        }
-    }
-
-    // ===== Supabase에서 데이터 불러오기 =====
-    async function loadFromCloud() {
-        const { data: row, error } = await supabase
-            .from('app_data')
-            .select('data, updated_at')
-            .eq('id', 'main')
-            .single();
-
-        if (error) {
-            alert('❌ 불러오기 실패: ' + error.message);
-            return;
+        // ===== 스냅샷 생성 (공통) =====
+        function _makeSnapshot() {
+            return {
+                _version: 2,
+                _savedAt: new Date().toISOString(),
+                masterData:                  typeof masterData                 !== 'undefined' ? masterData                 : [],
+                salesData:                   typeof salesData                  !== 'undefined' ? salesData                  : {},
+                cashData:                    typeof cashData                   !== 'undefined' ? cashData                   : {},
+                namuData:                    typeof namuData                   !== 'undefined' ? namuData                   : {},
+                returnsData:                 typeof returnsData                !== 'undefined' ? returnsData                : {},
+                returnsBookstoreData:        typeof returnsBookstoreData       !== 'undefined' ? returnsBookstoreData       : {},
+                returnsBookstoreDetailData:  typeof returnsBookstoreDetailData !== 'undefined' ? returnsBookstoreDetailData : {},
+                namuReturnsDetailData:       typeof namuReturnsDetailData      !== 'undefined' ? namuReturnsDetailData      : {},
+                specialData:                 typeof specialData                !== 'undefined' ? specialData                : [],
+                ledgerIntData:               typeof ledgerIntData              !== 'undefined' ? ledgerIntData              : [],
+                ledgerDepositData:           typeof ledgerDepositData          !== 'undefined' ? ledgerDepositData          : [],
+                ledgerSpecialData:           typeof ledgerSpecialData          !== 'undefined' ? ledgerSpecialData          : [],
+                storeDetailAdjustments:      typeof storeDetailAdjustments     !== 'undefined' ? storeDetailAdjustments     : {},
+            };
         }
 
-        const data = row.data;
-        if (!data || !data._version) {
-            alert('아직 저장된 데이터가 없습니다.');
-            return;
+        // ===== 스냅샷 적용 (공통) =====
+        function _applySnapshot(data) {
+            if (data.masterData                 !== undefined) masterData                 = data.masterData;
+            if (data.salesData                  !== undefined) salesData                  = data.salesData;
+            if (data.cashData                   !== undefined) cashData                   = data.cashData;
+            if (data.namuData                   !== undefined) namuData                   = data.namuData;
+            if (data.returnsData                !== undefined) returnsData                = data.returnsData;
+            if (data.returnsBookstoreData       !== undefined) returnsBookstoreData       = data.returnsBookstoreData;
+            if (data.returnsBookstoreDetailData !== undefined) returnsBookstoreDetailData = data.returnsBookstoreDetailData;
+            if (data.namuReturnsDetailData      !== undefined) namuReturnsDetailData      = data.namuReturnsDetailData;
+            if (data.specialData                !== undefined) specialData                = data.specialData;
+            if (data.ledgerIntData              !== undefined) ledgerIntData              = data.ledgerIntData;
+            if (data.ledgerDepositData          !== undefined) ledgerDepositData          = data.ledgerDepositData;
+            if (data.ledgerSpecialData          !== undefined) ledgerSpecialData          = data.ledgerSpecialData;
+            if (data.storeDetailAdjustments     !== undefined) Object.assign(storeDetailAdjustments, data.storeDetailAdjustments);
+
+            try { renderReturnsView();        } catch(e) {}
+            try { renderCollectionPanels();   } catch(e) {}
+            try { renderIntTab(currentIntTab);} catch(e) {}
+            try { renderDepositTab(currentDepositTab); } catch(e) {}
+            try { renderLedgerSpecialTab();   } catch(e) {}
         }
 
-        // 데이터 적용
-        if (data.masterData                 !== undefined) masterData                 = data.masterData;
-        if (data.salesData                  !== undefined) salesData                  = data.salesData;
-        if (data.cashData                   !== undefined) cashData                   = data.cashData;
-        if (data.namuData                   !== undefined) namuData                   = data.namuData;
-        if (data.returnsData                !== undefined) returnsData                = data.returnsData;
-        if (data.returnsBookstoreData       !== undefined) returnsBookstoreData       = data.returnsBookstoreData;
-        if (data.returnsBookstoreDetailData !== undefined) returnsBookstoreDetailData = data.returnsBookstoreDetailData;
-        if (data.namuReturnsDetailData      !== undefined) namuReturnsDetailData      = data.namuReturnsDetailData;
-        if (data.specialData                !== undefined) specialData                = data.specialData;
-        if (data.ledgerIntData              !== undefined) ledgerIntData              = data.ledgerIntData;
-        if (data.ledgerDepositData          !== undefined) ledgerDepositData          = data.ledgerDepositData;
-        if (data.ledgerSpecialData          !== undefined) ledgerSpecialData          = data.ledgerSpecialData;
-        if (data.storeDetailAdjustments     !== undefined) {
-            Object.assign(storeDetailAdjustments, data.storeDetailAdjustments);
+        // ===== ☁️ Supabase 클라우드 저장 =====
+        async function saveToCloud() {
+            const snapshot = _makeSnapshot();
+            const { error } = await supabase
+                .from('app_data')
+                .update({ data: snapshot, updated_at: new Date().toISOString() })
+                .eq('id', 'main');
+
+            if (error) {
+                alert('❌ 클라우드 저장 실패: ' + error.message);
+            } else {
+                alert('✅ 클라우드에 저장 완료!');
+            }
         }
 
-        // 화면 새로고침
-        try { renderReturnsView();        } catch(e) {}
-        try { renderCollectionPanels();   } catch(e) {}
-        try { renderIntTab(currentIntTab);} catch(e) {}
-        try { renderDepositTab(currentDepositTab); } catch(e) {}
-        try { renderLedgerSpecialTab();   } catch(e) {}
+        // ===== ☁️ Supabase 클라우드 불러오기 =====
+        async function loadFromCloud() {
+            const { data: row, error } = await supabase
+                .from('app_data')
+                .select('data, updated_at')
+                .eq('id', 'main')
+                .single();
 
-        const savedAt = row.updated_at ? new Date(row.updated_at).toLocaleString('ko-KR') : '';
-        alert('✅ 클라우드에서 불러오기 완료!\n마지막 저장: ' + savedAt);
-    }
+            if (error) {
+                alert('❌ 클라우드 불러오기 실패: ' + error.message);
+                return;
+            }
 
-    // ===== 기존 JSON 파일 저장/불러오기도 유지 =====
-    function exportAppData() {
-        const snapshot = {
-            _version: 2,
-            _exportedAt: new Date().toISOString(),
-            masterData, salesData, cashData, namuData, returnsData,
-            returnsBookstoreData, returnsBookstoreDetailData,
-            namuReturnsDetailData, specialData,
-            ledgerIntData, ledgerDepositData, ledgerSpecialData,
-            storeDetailAdjustments,
-        };
-        const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = '안티그래비티_데이터_' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '.json';
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    }
+            const data = row.data;
+            if (!data || !data._version) {
+                alert('아직 클라우드에 저장된 데이터가 없습니다.\n먼저 [☁️ 클라우드 저장]을 해주세요.');
+                return;
+            }
 
-    function importAppData(input) {
-        const file = input.files[0]; if (!file) return;
-        input.value = '';
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const data = JSON.parse(e.target.result);
-                if (!data._version) throw new Error('올바른 형식이 아닙니다.');
-                if (data.masterData !== undefined) masterData = data.masterData;
-                if (data.salesData  !== undefined) salesData  = data.salesData;
-                if (data.cashData   !== undefined) cashData   = data.cashData;
-                if (data.namuData   !== undefined) namuData   = data.namuData;
-                if (data.returnsData !== undefined) returnsData = data.returnsData;
-                if (data.returnsBookstoreData !== undefined) returnsBookstoreData = data.returnsBookstoreData;
-                if (data.returnsBookstoreDetailData !== undefined) returnsBookstoreDetailData = data.returnsBookstoreDetailData;
-                if (data.namuReturnsDetailData !== undefined) namuReturnsDetailData = data.namuReturnsDetailData;
-                if (data.specialData !== undefined) specialData = data.specialData;
-                if (data.ledgerIntData !== undefined) ledgerIntData = data.ledgerIntData;
-                if (data.ledgerDepositData !== undefined) ledgerDepositData = data.ledgerDepositData;
-                if (data.ledgerSpecialData !== undefined) ledgerSpecialData = data.ledgerSpecialData;
-                if (data.storeDetailAdjustments !== undefined) Object.assign(storeDetailAdjustments, data.storeDetailAdjustments);
-                try { renderReturnsView(); } catch(e) {}
-                try { renderCollectionPanels(); } catch(e) {}
-                try { renderIntTab(currentIntTab); } catch(e) {}
-                try { renderDepositTab(currentDepositTab); } catch(e) {}
-                try { renderLedgerSpecialTab(); } catch(e) {}
-                alert('✅ 파일에서 불러오기 완료!');
-            } catch(err) { alert('❌ 실패: ' + err.message); }
-        };
-        reader.readAsText(file, 'utf-8');
-    }
-</script>
+            _applySnapshot(data);
+
+            const savedAt = row.updated_at ? new Date(row.updated_at).toLocaleString('ko-KR') : '';
+            alert('✅ 클라우드에서 불러오기 완료!\n마지막 저장: ' + savedAt);
+        }
+
+        // ===== 기존 JSON 파일 저장 =====
+        function exportAppData() {
+            const snapshot = _makeSnapshot();
+            snapshot._exportedAt = snapshot._savedAt;
+            const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+            a.download = `안티그래비티_데이터_${dateStr}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+        }
+
+        // ===== 기존 JSON 파일 불러오기 =====
+        function importAppData(input) {
+            const file = input.files[0];
+            if (!file) return;
+            input.value = '';
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (!data._version) throw new Error('올바른 형식의 파일이 아닙니다.');
+                    _applySnapshot(data);
+                    const exportedAt = data._exportedAt ? new Date(data._exportedAt).toLocaleString('ko-KR') : '알 수 없음';
+                    alert(`✅ 데이터 불러오기 완료!\n저장 시각: ${exportedAt}`);
+                } catch(err) {
+                    alert('❌ 파일을 불러오는 데 실패했습니다.\n' + err.message);
+                }
+            };
+            reader.readAsText(file, 'utf-8');
+        }
+    </script>
 </body>
 
 </html>

@@ -16,11 +16,11 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/cpexcel.js"></script>
 
     <!-- Supabase 연결 -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script>
       const SUPABASE_URL = 'https://jyrzdbmqnwotomcuucgd.supabase.co';
       const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp5cnpkYm1xbndvdG9tY3V1Y2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNzkzMjcsImV4cCI6MjA4OTk1NTMyN30.hjfGmMgYJhYI2Pc5vCGUHyJlkWaDYoeOGV577vsAsSw';
-      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     </script>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
@@ -8774,7 +8774,7 @@ window.onload = function() { setTimeout(function() { window.print(); window.clos
         // ===== ☁️ Supabase 클라우드 저장 =====
         async function saveToCloud() {
             const snapshot = _makeSnapshot();
-            const { error } = await supabase
+            const { error } = await sb
                 .from('app_data')
                 .update({ data: snapshot, updated_at: new Date().toISOString() })
                 .eq('id', 'main');
@@ -8788,7 +8788,7 @@ window.onload = function() { setTimeout(function() { window.print(); window.clos
 
         // ===== ☁️ Supabase 클라우드 불러오기 =====
         async function loadFromCloud() {
-            const { data: row, error } = await supabase
+            const { data: row, error } = await sb
                 .from('app_data')
                 .select('data, updated_at')
                 .eq('id', 'main')
